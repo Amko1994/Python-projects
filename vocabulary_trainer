@@ -1,0 +1,166 @@
+import random
+import datetime
+import json
+
+vocabulary = {}
+temp_vocabulary = vocabulary.copy()
+now = datetime.datetime.now()
+format_now = now.strftime("%d-%m-%Y %H:%M:%S")
+
+# App metadata
+app_info = {
+    'version': '1.0',
+    'creator': 'Amir Musovic',
+    'contact': 'amko321@hotmail.fr',
+    'last_updated': '09-05-2024'
+}
+
+# Main menu
+def main_menu():
+    while True:
+        print("\nPlease enter a number to choose one of the following options:")
+        options = input("\n1.Enter words\n2.Delete words\n3.Display vocabulary list\n4.Train vocabulary\n5.About\n6.Exit app\n")
+        if options == "1":
+            enter_words()
+        elif options == "2":
+            remove_words()
+        elif options == "3":
+            display_vocabulary_list()
+        elif options == "4":
+            train_vocabulary()
+        elif options == "5":
+            display_app_info() 
+        elif options == "6":
+            print(f"Thanks for using the app, {user_name}!")
+            exit()
+        else:
+            print("Error. Please enter the number of an option.")
+            continue
+
+# Import words with their translations to the vocabulary list
+def enter_words():
+    while True:
+            word = input("Please enter a word:\n")
+            translation = input("Please enter the translation of the words:\n")
+            vocabulary[word] = translation
+            print(f"Words added: {word} - {translation}")
+            continue_adding = input("Do you want to enter more words? (Y/N)\n").lower()
+            if continue_adding != 'y':
+                export_vocabulary()
+                main_menu()
+
+# Remove words from the vocabulary list
+def remove_words():
+    while True:
+        empty_vocabulary_list()
+        for index, (word, translation) in enumerate(vocabulary.items(), start=1):
+            print(f"{index}.{word} - {translation}")
+        while True:
+            word_to_remove = input("Input a word you want to remove, or type 'exit' to go back to the main menu:\n")
+            if word_to_remove.lower() == 'exit':
+                export_vocabulary()
+                main_menu()
+            if word_to_remove in vocabulary:
+                vocabulary.pop(word_to_remove)
+                print(f"Removed '{word_to_remove}' from the vocabulary list.")
+            else:
+                print("Word not found. Please try again.")
+
+# Display words from the vocabulary list
+def display_vocabulary_list():
+    empty_vocabulary_list()
+    print("\nThese are the words and translations you entered so far:\n")
+    for index, (word, translation) in enumerate(vocabulary.items(), start=1):
+        print(f"{index}.{word} - {translation}")
+    input("\nPress ENTER to go back to the main menu...")
+            
+# Train vocabulary from the list
+def train_vocabulary():
+    empty_vocabulary_list()
+    global temp_vocabulary
+    while True:
+        temp_vocabulary = vocabulary.copy()
+        score = 0
+        try:
+            nr_words = int(input("Input the number of words you want to train:\n"))
+            if nr_words > len(temp_vocabulary):
+                print("Not enough words to train, please reduce the number.")
+                continue
+        except ValueError:
+            print("Please enter a valid number.")
+            continue
+# Ask either for word or translation and add to the score
+        for number in range(0, nr_words):
+            entry = random.choice(list(temp_vocabulary.items()))
+            word_or_translation = random.choice(['word', 'translation'])
+
+            if word_or_translation == 'word':
+                answer = input(f"What's the word for {entry[1]}?\n").lower()
+                correct_answer = entry[0]
+            else:
+                answer = input(f"What's the word for {entry[0]}?\n").lower()
+                correct_answer = entry[1]
+            
+            if answer == correct_answer:
+                print("Well done!")
+                score += 1
+            else:
+                print("Wrong answer!")
+            
+            del temp_vocabulary[entry[0]]
+        
+        if not temp_vocabulary:
+                print("All words have been used. Resetting list.")
+
+        print(f"Your score: {score}/{nr_words}")
+        while True:
+            continue_training = input("Continue training? (Y/N) ").lower()
+            if continue_training == 'y':    
+                break
+            elif continue_training == 'n':
+                main_menu()
+            else:
+                print("Error. Please enter a valid answer (Y/N).")
+
+# Function to display app information
+def display_app_info():
+    print("\nApp Information:")
+    print(f"Version: {app_info['version']}")
+    print(f"Creator: {app_info['creator']}")
+    print(f"Contact: {app_info['contact']}")
+    print(f"Last Updated: {app_info['last_updated']}")
+    input("\nPress Enter to return to the main menu...")
+    main_menu()
+
+# Export vocabulary to JSON file
+def export_vocabulary():
+    with open('vocabulary.json', 'w') as file:
+        json.dump(vocabulary, file)
+    print("Vocabulary list saved succesfully.")
+    main_menu()
+
+# Import vocabulary from JSON file
+def import_vocabulary():
+    try:
+        with open('vocabulary.json', 'r') as file:
+            global vocabulary
+            vocabulary = json.load(file)
+        print("Vocabulary list loaded succesfully.")
+        main_menu()
+    except FileNotFoundError:
+        print("No vocabulary file found. Please export your vocabulary first.")
+        main_menu()
+
+# Display message if vocabulary list is empty
+def empty_vocabulary_list():
+    if not vocabulary:
+        print("\nThe vocabulary list is currently empty.")
+        print("Going back to the menu...")
+        main_menu()
+
+# Start the app
+user_name = input("Please input your name: ")
+print(f"\nWelcome to the vocabulary trainer app, {user_name}!")
+print(f"Current date and time: {format_now}")
+import_vocabulary()
+main_menu()
